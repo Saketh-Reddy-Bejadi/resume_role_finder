@@ -1,0 +1,9 @@
+streamlit
+pickle-mixin
+nltk
+PyPDF2
+scikit-learn
+matplotlib
+numpy
+pandas
+seaborn

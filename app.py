@@ -4,11 +4,9 @@ import re
 import nltk
 from PyPDF2 import PdfReader
 
-# Download necessary NLTK data
 nltk.download('punkt')
 nltk.download('stopwords')
 
-# Load models
 clf = pickle.load(open('clf.pkl', 'rb'))
 tfidf = pickle.load(open('tfidf.pkl', 'rb'))
 
@@ -16,13 +14,13 @@ def clean_resume(resume_text):
     """
     Function to clean resume text by removing URLs, special characters, etc.
     """
-    clean_text = re.sub('http\S+\s*', ' ', resume_text)  # Remove URLs
-    clean_text = re.sub('RT|cc', ' ', clean_text)  # Remove RT and cc
-    clean_text = re.sub('#\S+', '', clean_text)  # Remove hashtags
-    clean_text = re.sub('@\S+', '  ', clean_text)  # Remove mentions
-    clean_text = re.sub('[%s]' % re.escape("""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""), ' ', clean_text)  # Remove special characters
-    clean_text = re.sub(r'[^\x00-\x7f]', r' ', clean_text)  # Remove non-ASCII characters
-    clean_text = re.sub('\s+', ' ', clean_text)  # Replace multiple spaces with a single space
+    clean_text = re.sub('http\S+\s*', ' ', resume_text)  
+    clean_text = re.sub('RT|cc', ' ', clean_text) 
+    clean_text = re.sub('#\S+', '', clean_text)  
+    clean_text = re.sub('@\S+', '  ', clean_text)
+    clean_text = re.sub('[%s]' % re.escape("""!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""), ' ', clean_text)
+    clean_text = re.sub(r'[^\x00-\x7f]', r' ', clean_text) 
+    clean_text = re.sub('\s+', ' ', clean_text) 
     return clean_text
 
 def extract_text_from_pdf(uploaded_file):
@@ -35,17 +33,15 @@ def extract_text_from_pdf(uploaded_file):
         text += page.extract_text()
     return text
 
-def extract_skills_and_experience(text):
+def extract_skills(text):
     """
     Function to extract skills and experience from resume text
     """
     skills_keywords = ['Python', 'Java', 'C++', 'SQL', 'JavaScript', 'AWS', 'Azure', 'Docker', 'Kubernetes', 'Machine Learning', 'Deep Learning', 'AI', 'Data Science', 'DevOps', 'Web Development', 'React', 'Angular', 'Django', 'Flask']
-    experience_keywords = ['experience', 'worked', 'developed', 'managed', 'led', 'designed']
 
     skills = [skill for skill in skills_keywords if re.search(r'\b' + re.escape(skill) + r'\b', text, re.IGNORECASE)]
-    experience = [exp for exp in experience_keywords if re.search(r'\b' + re.escape(exp) + r'\b', text, re.IGNORECASE)]
 
-    return skills, experience
+    return skills
 
 def main():
     """
@@ -65,17 +61,14 @@ def main():
                 resume_text = resume_bytes.decode('latin-1')
 
         cleaned_resume = clean_resume(resume_text)
-        skills, experience = extract_skills_and_experience(cleaned_resume)
+        skills= extract_skills(cleaned_resume)
         
         st.write("Extracted Skills:", skills)
-        st.write("Extracted Experience Keywords:", experience)
         
-        # Combine skills and experience into the cleaned_resume
-        enriched_resume = " ".join(skills + experience) + " " + cleaned_resume
+        enriched_resume = " ".join(skills) + " " + cleaned_resume
         input_features = tfidf.transform([enriched_resume])
         prediction_id = clf.predict(input_features)[0]
 
-        # Updated category mapping with technical roles only
         category_mapping = {
             2: "Automation Testing",
             3: "Blockchain",
